@@ -3,6 +3,7 @@ import {
   type CompleteSecretRequestInput,
   type CompleteTaskInput,
   type CreateAgentEventInput,
+  type CreateIntegrationAnalysisInput,
   type CreateProjectInput,
   type CreateSecretRequestInput,
   type CreateTaskInput,
@@ -24,15 +25,18 @@ import {
 } from "./domain.js"
 import { DependencyBlockedError } from "./errors.js"
 import { type EventEvaluation, EventEvaluator } from "./event_evaluator.js"
+import { IntegrationAgent, type IntegrationEvaluation } from "./integration_agent.js"
 import type { MemoryStore } from "./store.js"
 
 export class Orchestrator {
   readonly #events: EventEvaluator
+  readonly #integration: IntegrationAgent
   readonly #store: MemoryStore
 
   constructor(store: MemoryStore) {
     this.#store = store
     this.#events = new EventEvaluator(store)
+    this.#integration = new IntegrationAgent(store)
   }
 
   createProject(input: CreateProjectInput): Project {
@@ -77,6 +81,7 @@ export class Orchestrator {
       secretRequests: [],
       events: [],
       decisions: [],
+      integrationAnalyses: [],
     }
     return this.#store.createProject(project)
   }
@@ -168,6 +173,13 @@ export class Orchestrator {
       }),
     )
     return this.#events.apply(projectId, event)
+  }
+
+  analyzeIntegration(
+    projectId: ProjectId,
+    input: CreateIntegrationAnalysisInput,
+  ): IntegrationEvaluation {
+    return this.#integration.analyze(projectId, input)
   }
 }
 

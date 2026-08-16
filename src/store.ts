@@ -1,6 +1,7 @@
 import type {
   AgentEvent,
   Decision,
+  IntegrationAnalysis,
   Project,
   ProjectId,
   SecretRequest,
@@ -58,6 +59,15 @@ export class MemoryStore {
       decisions: [...project.decisions, decision],
     })
     return decision
+  }
+
+  addIntegrationAnalysis(projectId: ProjectId, analysis: IntegrationAnalysis): IntegrationAnalysis {
+    const project = this.getProject(projectId)
+    this.#projects.set(projectId, {
+      ...project,
+      integrationAnalyses: [...project.integrationAnalyses, analysis],
+    })
+    return analysis
   }
 
   getTask(projectId: ProjectId, taskId: TaskId): Task {

@@ -6,6 +6,7 @@ export const HandoffIdSchema = z.string().uuid().brand("HandoffId")
 export const SecretRequestIdSchema = z.string().uuid().brand("SecretRequestId")
 export const AgentEventIdSchema = z.string().uuid().brand("AgentEventId")
 export const DecisionIdSchema = z.string().uuid().brand("DecisionId")
+export const IntegrationAnalysisIdSchema = z.string().uuid().brand("IntegrationAnalysisId")
 
 export type ProjectId = z.infer<typeof ProjectIdSchema>
 export type TaskId = z.infer<typeof TaskIdSchema>
@@ -13,6 +14,7 @@ export type HandoffId = z.infer<typeof HandoffIdSchema>
 export type SecretRequestId = z.infer<typeof SecretRequestIdSchema>
 export type AgentEventId = z.infer<typeof AgentEventIdSchema>
 export type DecisionId = z.infer<typeof DecisionIdSchema>
+export type IntegrationAnalysisId = z.infer<typeof IntegrationAnalysisIdSchema>
 
 export const ProjectStatus = {
   Planning: "planning",
@@ -58,12 +60,26 @@ export const DecisionAction = {
   Replan: "replan",
 } as const
 
+export const IntegrationRisk = {
+  Low: "low",
+  Medium: "medium",
+  High: "high",
+} as const
+
+export const IntegrationAction = {
+  AutoIntegrate: "auto_integrate",
+  HumanApproval: "human_approval",
+  ReworkRequired: "rework_required",
+} as const
+
 export type ProjectStatus = (typeof ProjectStatus)[keyof typeof ProjectStatus]
 export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus]
 export type TaskKind = (typeof TaskKind)[keyof typeof TaskKind]
 export type SecretRequestStatus = (typeof SecretRequestStatus)[keyof typeof SecretRequestStatus]
 export type AgentEventType = (typeof AgentEventType)[keyof typeof AgentEventType]
 export type DecisionAction = (typeof DecisionAction)[keyof typeof DecisionAction]
+export type IntegrationRisk = (typeof IntegrationRisk)[keyof typeof IntegrationRisk]
+export type IntegrationAction = (typeof IntegrationAction)[keyof typeof IntegrationAction]
 
 export type Project = {
   readonly id: ProjectId
@@ -74,6 +90,7 @@ export type Project = {
   readonly secretRequests: readonly SecretRequest[]
   readonly events: readonly AgentEvent[]
   readonly decisions: readonly Decision[]
+  readonly integrationAnalyses: readonly IntegrationAnalysis[]
 }
 
 export type Task = {
@@ -129,6 +146,22 @@ export type Decision = {
   readonly updatedTaskId?: TaskId
 }
 
+export type IntegrationAnalysis = {
+  readonly id: IntegrationAnalysisId
+  readonly projectId: ProjectId
+  readonly sourceAgentIds: readonly string[]
+  readonly summary: string
+  readonly changedFiles: readonly string[]
+  readonly apiChanged: boolean
+  readonly schemaChanged: boolean
+  readonly testsPassed: boolean
+  readonly conflicts: readonly string[]
+  readonly risk: IntegrationRisk
+  readonly action: IntegrationAction
+  readonly approvalRequired: boolean
+  readonly instructions: string
+}
+
 export const CreateProjectSchema = z.object({
   name: z.string().trim().min(1).max(120),
   idea: z.string().trim().min(1).max(4000),
@@ -173,12 +206,23 @@ export const CreateAgentEventSchema = z.object({
   taskStatus: z.enum(TaskStatus).optional(),
 })
 
+export const CreateIntegrationAnalysisSchema = z.object({
+  sourceAgentIds: z.array(z.string().trim().min(1).max(80)).min(1),
+  summary: z.string().trim().min(1).max(1200),
+  changedFiles: z.array(z.string().trim().min(1)).default([]),
+  apiChanged: z.boolean().default(false),
+  schemaChanged: z.boolean().default(false),
+  testsPassed: z.boolean().default(false),
+  conflicts: z.array(z.string().trim().min(1)).default([]),
+})
+
 export type CreateProjectInput = z.infer<typeof CreateProjectSchema>
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>
 export type CompleteTaskInput = z.infer<typeof CompleteTaskSchema>
 export type CreateSecretRequestInput = z.infer<typeof CreateSecretRequestSchema>
 export type CompleteSecretRequestInput = z.infer<typeof CompleteSecretRequestSchema>
 export type CreateAgentEventInput = z.infer<typeof CreateAgentEventSchema>
+export type CreateIntegrationAnalysisInput = z.infer<typeof CreateIntegrationAnalysisSchema>
 
 export function newProjectId(): ProjectId {
   return ProjectIdSchema.parse(crypto.randomUUID())
@@ -202,4 +246,8 @@ export function newAgentEventId(): AgentEventId {
 
 export function newDecisionId(): DecisionId {
   return DecisionIdSchema.parse(crypto.randomUUID())
+}
+
+export function newIntegrationAnalysisId(): IntegrationAnalysisId {
+  return IntegrationAnalysisIdSchema.parse(crypto.randomUUID())
 }

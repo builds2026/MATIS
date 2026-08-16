@@ -6,6 +6,7 @@ import {
   CompleteSecretRequestSchema,
   CompleteTaskSchema,
   CreateAgentEventSchema,
+  CreateIntegrationAnalysisSchema,
   CreateProjectSchema,
   CreateSecretRequestSchema,
   CreateTaskSchema,
@@ -93,6 +94,18 @@ export function createApp(): Hono {
       return c.json(input.error, 400)
     }
     return c.json(orchestrator.ingestAgentEvent(projectId.value, input.value), 201)
+  })
+
+  app.post("/api/projects/:projectId/integrations", async (c) => {
+    const projectId = readProjectId(c)
+    const input = await readJson(c, CreateIntegrationAnalysisSchema)
+    if (!projectId.ok) {
+      return c.json(projectId.error, 400)
+    }
+    if (!input.ok) {
+      return c.json(input.error, 400)
+    }
+    return c.json(orchestrator.analyzeIntegration(projectId.value, input.value), 201)
   })
 
   app.post("/api/projects/:projectId/secret-requests", async (c) => {
