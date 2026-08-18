@@ -19,6 +19,7 @@ import {
 } from "./domain.js"
 import { DependencyBlockedError, NotFoundError } from "./errors.js"
 import { Orchestrator } from "./orchestrator.js"
+import { AnalyzeProjectSchema } from "./project_analyzer.js"
 import { MemoryStore } from "./store.js"
 
 type ParseResult<T> =
@@ -50,6 +51,18 @@ export function createApp(): Hono {
       return c.json(projectId.error, 400)
     }
     return c.json(orchestrator.getProject(projectId.value))
+  })
+
+  app.post("/api/projects/:projectId/analysis", async (c) => {
+    const projectId = readProjectId(c)
+    const input = await readJson(c, AnalyzeProjectSchema)
+    if (!projectId.ok) {
+      return c.json(projectId.error, 400)
+    }
+    if (!input.ok) {
+      return c.json(input.error, 400)
+    }
+    return c.json(orchestrator.analyzeProject(projectId.value, input.value), 201)
   })
 
   app.post("/api/projects/:projectId/tasks", async (c) => {

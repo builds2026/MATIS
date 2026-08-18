@@ -26,11 +26,17 @@ import {
 import { DependencyBlockedError } from "./errors.js"
 import { type EventEvaluation, EventEvaluator } from "./event_evaluator.js"
 import { IntegrationAgent, type IntegrationEvaluation } from "./integration_agent.js"
+import {
+  type AnalyzeProjectInput,
+  type ProjectAnalysis,
+  ProjectAnalyzer,
+} from "./project_analyzer.js"
 import type { MemoryStore } from "./store.js"
 
 export class Orchestrator {
   readonly #events: EventEvaluator
   readonly #integration: IntegrationAgent
+  readonly #projectAnalyzer = new ProjectAnalyzer()
   readonly #store: MemoryStore
 
   constructor(store: MemoryStore) {
@@ -180,6 +186,11 @@ export class Orchestrator {
     input: CreateIntegrationAnalysisInput,
   ): IntegrationEvaluation {
     return this.#integration.analyze(projectId, input)
+  }
+
+  analyzeProject(projectId: ProjectId, input: AnalyzeProjectInput): ProjectAnalysis {
+    this.#store.getProject(projectId)
+    return this.#projectAnalyzer.analyze(input)
   }
 }
 
