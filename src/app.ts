@@ -18,6 +18,7 @@ import {
   TaskIdSchema,
 } from "./domain.js"
 import { DependencyBlockedError, NotFoundError } from "./errors.js"
+import { HarnessSpecSchema, validateHarnessSpec } from "./harness_spec.js"
 import { Orchestrator } from "./orchestrator.js"
 import { AnalyzeProjectSchema } from "./project_analyzer.js"
 import { MemoryStore } from "./store.js"
@@ -36,6 +37,14 @@ export function createApp(): Hono {
   const orchestrator = new Orchestrator(new MemoryStore())
 
   app.get("/health", (c) => c.json({ status: "ok" }))
+
+  app.post("/api/harness-specs/validate", async (c) => {
+    const input = await readJson(c, HarnessSpecSchema)
+    if (!input.ok) {
+      return c.json(input.error, 400)
+    }
+    return c.json(validateHarnessSpec(input.value))
+  })
 
   app.post("/api/projects", async (c) => {
     const input = await readJson(c, CreateProjectSchema)
