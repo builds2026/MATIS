@@ -19,6 +19,7 @@ import {
 } from "./domain.js"
 import { DependencyBlockedError, NotFoundError } from "./errors.js"
 import { HarnessSpecSchema, validateHarnessSpec } from "./harness_spec.js"
+import { HarnestSpecSchema, validateHarnestSpec } from "./harnest_spec.js"
 import { Orchestrator } from "./orchestrator.js"
 import { AnalyzeProjectSchema } from "./project_analyzer.js"
 import { MemoryStore } from "./store.js"
@@ -37,6 +38,14 @@ export function createApp(): Hono {
   const orchestrator = new Orchestrator(new MemoryStore())
 
   app.get("/health", (c) => c.json({ status: "ok" }))
+
+  app.post("/api/harnest-specs/validate", async (c) => {
+    const input = await readJson(c, HarnestSpecSchema)
+    if (!input.ok) {
+      return c.json(input.error, 400)
+    }
+    return c.json(validateHarnestSpec(input.value))
+  })
 
   app.post("/api/harness-specs/validate", async (c) => {
     const input = await readJson(c, HarnessSpecSchema)
